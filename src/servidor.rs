@@ -14,7 +14,7 @@ use std::sync::{Arc, Mutex};
 use std::cmp::min;
 use crate::{PORTA,BUFFBYTES,PASTARECEBE};
 
-type Arcmb = Arc<Mutex<BufReader<TcpStream>>>;
+type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
 struct Cabecalho{
 	nome: String,
@@ -22,9 +22,9 @@ struct Cabecalho{
 }
 
 impl Cabecalho {
-	fn obter(reader: Arcmb)-> Option<Self>{
+	fn obter(reader: &mut Arcmb)-> Option<Self>{
 		let mut nome = String::new();
-		let mut reader = reader.lock().unwrap();
+		//let mut reader = reader.lock().unwrap();
 		let _ = reader.read_line(&mut nome).expect("Erro na leitura do nome");
 		if nome.is_empty(){
 			println!("O cliente desconectou");
@@ -70,18 +70,18 @@ pub fn iniciar() -> std::io::Result<()> {
 	let (stream , _) = listener.accept().unwrap();
 	println!("Cliente conectado!");
 
-	let reader = Arc::new(Mutex::new(BufReader::new(stream)));
+	let mut reader = BufReader::new(stream);
 
 	//lendo stream e criando arquivos
-	while let Some(cab) = Cabecalho::obter(reader.clone()){
-		criar_arquivo(cab, reader.clone());
+	while let Some(cab) = Cabecalho::obter(&mut reader){
+		criar_arquivo(cab, &mut reader);
 	}
 
 	sleep(Duration::from_secs(1));
 	Ok(())
 }
 
-fn criar_arquivo(cab: Cabecalho, reader: Arcmb){
+fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 	//agora o nome contem os diretórios
 	let mut nome_com_caminho = PathBuf::from_str(PASTARECEBE).unwrap();
 
@@ -99,43 +99,28 @@ fn criar_arquivo(cab: Cabecalho, reader: Arcmb){
 	let mut file = BufWriter::with_capacity(2*BUFFBYTES,file);
 
 	//criando canal
-	let (tx1,rx1) = sync_channel(100);
+	//let (tx1,rx1) = sync_channel(100);
 
 	//contador do tamanho u64
 	let mut tamanho_restante = cab.tamanho;
 
-	//leitor tcp
 	//TODO:testar sem criar uma nova thread, modo síncrono
-	let thread1 = thread::spawn(move ||{
-		let mut buffer8k = [0u8;BUFFBYTES];
-		let mut reader = reader.lock().unwrap();
-		loop{
-			let limite = min(BUFFBYTES as u64, tamanho_restante) as usize;
-			if let Ok(n) = reader.read(&mut buffer8k[..limite]){
-				tx1.send((buffer8k,n)).expect("Canal fechado antes da hora");
-				tamanho_restante -= n as u64;//Ok a contagem de tamanho está exatamente igual
-				if tamanho_restante == 0{
-					break;
-				}
-			}else{
-				panic!("Erro na leitura");
-			}
-		}
-	});
 
 	//escrevendo no arquivo
+	let mut limite: usize;
+	let mut buffer8k = [0u8;BUFFBYTES];
 	loop{
-		if let Ok((buff,n)) = rx1.recv(){
-			if n == 0{
-				break;//fim da leitura
+		limite = min(BUFFBYTES as u64, tamanho_restante) as usize;
+		if let Ok(n) = reader.read(&mut buffer8k[..limite]){
+			tamanho_restante -= n as u64;//Ok a contagem de tamanho está exatamente igual
+			file.write_all(&buffer8k[..n]).expect("Erro na escrita");
+			if tamanho_restante == 0{
+				break;
 			}
-			file.write_all(&buff[..n]).expect("Erro na escrita");
 		}else{
-			break;
+			panic!("Erro na leitura");
 		}
 	}
-
-	thread1.join().expect("Erro no leitor TCP");
 }
 
 /* Antigo, único arquivo
