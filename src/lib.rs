@@ -1,6 +1,10 @@
 use std::path::Path;
 use std::fs;
 use std::process;
+use std::thread::{self,JoinHandle};
+use std::cell::OnceCell;
+use std::time::Duration;
+use std::sync::{Arc, Mutex};
 
 mod servidor;
 mod cliente;
@@ -10,6 +14,54 @@ pub const PORTA: u16 = 7879;
 pub const BUFFBYTES: usize = 8192;
 pub const PASTAENVIO: &str = "enviar/";
 pub const PASTARECEBE: &str = "receber/";
+const PERIODO_THREAD: u64 = 295;
+
+pub struct BufTerminal{
+	thread: OnceCell<JoinHandle<()>>,
+	texto_desligar: Arc<Mutex<(String,bool)>>,
+}
+
+impl BufTerminal{
+
+	pub fn new()-> Self{
+		let t_d = Arc::new(Mutex::new((String::new(), false)));
+		let texto_desigar = t_d.clone();
+		let thread1 = thread::spawn(move || {
+		loop{
+				let mut campos = t_d.lock().unwrap();
+				print!("{}",campos.0);
+				let desligado = campos.1;
+				if desligado{
+					println!("Desligando...");
+					break;
+				}
+				campos.0.clear();
+				drop(campos);
+				thread::sleep(Duration::from_millis(PERIODO_THREAD));
+			}
+		});
+		let cell = OnceCell::new();
+		cell.set(thread1).unwrap();
+		Self{
+			thread: cell,
+			texto_desligar: texto_desigar,
+		}
+	}
+
+	fn escreve(& self, texto: &str){
+		let mut campos = self.texto_desligar.lock().unwrap();
+		campos.0.push_str(texto);
+	}
+}
+
+impl Drop for BufTerminal {
+	fn drop(&mut self) {
+		let mut campos = self.texto_desligar.lock().unwrap();
+		campos.1 = true;
+		drop(campos);
+		let _ = self.thread.take().unwrap().join();
+	}
+}
 
 //exibe os comandos disponíveis
 pub fn comandos_disponiveis(){

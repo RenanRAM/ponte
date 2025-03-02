@@ -2,17 +2,13 @@ use std::net::{TcpListener, TcpStream,Ipv4Addr};
 use std::io::{self,BufReader,BufRead,Read,Write,BufWriter};
 use std::fs::{self,File};
 use std::str::FromStr;
-use std::time::Duration;
 use std::path::PathBuf;
 //use std::time::Instant;
-use std::thread::sleep;
-
-use std::thread;
 use std::process;
 use std::io::Error;
-use std::sync::{Arc, Mutex};
+
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,BufTerminal};
 
 type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
@@ -21,44 +17,8 @@ struct Cabecalho{
 	tamanho: u64
 }
 
-struct BufTerminal{
-	texto: Mutex<String>,
-	desligar: Mutex<bool>,
-}
-
-impl BufTerminal{
-
-	fn new()-> Self{
-		Self{
-			texto: Mutex::new(String::new()),
-			desligar: Mutex::new(false),
-		}
-	}
-
-	fn escreve(& self, texto: &str){
-		let mut campo = self.texto.lock().unwrap();
-		campo.push_str(texto);
-	}
-
-	fn escrever_terminal(& self)-> bool{
-		let mut campo = self.texto.lock().unwrap();
-		print!("{campo}");
-		let desligado = self.desligar.lock().unwrap();
-		if *desligado{
-			return *desligado
-		}
-		campo.clear();
-		*desligado
-	}
-
-	fn desligar(& self){
-		let mut campo = self.desligar.lock().unwrap();
-		*campo = true;
-	}
-}
-
 impl Cabecalho {
-	fn obter(reader: &mut Arcmb, buf_terminal: Arc<BufTerminal>)-> Option<Self>{
+	fn obter(reader: &mut Arcmb, buf_terminal: & BufTerminal)-> Option<Self>{
 		let mut nome = String::new();
 		//let mut reader = reader.lock().unwrap();
 		let _ = reader.read_line(&mut nome).expect("Erro na leitura do nome");
@@ -107,22 +67,13 @@ pub fn iniciar() -> std::io::Result<()> {
 
 	let mut reader = BufReader::new(stream);
 
-	let buf_terminal = Arc::new(BufTerminal::new());
-	let buf_terminal1 = buf_terminal.clone();
-	let thread1 = thread::spawn(move || {
-		while !buf_terminal1.escrever_terminal(){
-			thread::sleep(Duration::from_millis(295));
-		}
-		println!("Desligando...");
-	});
+	let buf_terminal = BufTerminal::new();
+
 
 	//lendo stream e criando arquivos
-	while let Some(cab) = Cabecalho::obter(&mut reader, buf_terminal.clone()){
+	while let Some(cab) = Cabecalho::obter(&mut reader, &buf_terminal){
 		criar_arquivo(cab, &mut reader);
 	}
-	buf_terminal.desligar();
-	thread1.join().unwrap();
-	sleep(Duration::from_secs(1));
 	Ok(())
 }
 
