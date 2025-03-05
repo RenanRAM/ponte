@@ -9,7 +9,7 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
-use crate::{PORTA,BUFFBYTES,PASTAENVIO};
+use crate::{PORTA,BUFFBYTES,PASTAENVIO,BufTerminal};
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 
@@ -55,7 +55,7 @@ pub fn iniciar() -> std::io::Result<()> {
 								//erro recuperável
 								ErrorKind::Interrupted=>{
 									println!("Escrita interrompida, retomando...");
-									sleep(Duration::from_millis(64));
+									sleep(Duration::from_millis(110));
 								},
 								_=>{
 									panic!("Erro fatal no envio {e:?}");
@@ -70,11 +70,15 @@ pub fn iniciar() -> std::io::Result<()> {
 		}
 	});
 
-	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone());
+	//criando um BufTerminal para aumentar a velocidade
+	let bufterminal = BufTerminal::new();
+
+	//lendo a pasta de envio e enviando os dados para a thread1
+	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone(), &bufterminal);
 	if !status{
 		println!("Ocorreu um erro no envio!");
 	}
-	//sinalizando o fim
+	//sinalizando o fim para o servidor
 	let (ultimobuff,tamanhototal) = singlebuff("FIM\r\n",0u64);
 	tx1.send((ultimobuff,tamanhototal)).expect("Canal fechado antes do ultimo buffer");
 	drop(tx1);
@@ -93,18 +97,18 @@ pub fn iniciar() -> std::io::Result<()> {
 }
 
 //true = ok, false = erro, faz a leitura dos diretórios e envia todos os arquivos
-fn read_dir_recursive(dir: PathBuf, vetor_erro: &mut Vec<String>, tx1: SyncSender<MPSCDATA>)->bool{//funcionando
+fn read_dir_recursive(dir: PathBuf, vetor_erro: &mut Vec<String>, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)->bool{//funcionando
 	if let Ok(iterador) = dir.read_dir(){
 		for entry in iterador{
 			let entry = entry.expect("Erro na leitura do iterador de diretórios");
 			let caminho_arquivo = entry.path();//PathBuf, é a única opção, se não usaria &Path
 			if caminho_arquivo.is_file() {
-				if !enviar(caminho_arquivo.as_path(), tx1.clone()){
+				if !enviar(caminho_arquivo.as_path(), tx1.clone(), bufterminal){
 					//não foi enviado, adicionar ao vetor de não enviados
 					vetor_erro.push(String::from(caminho_arquivo.to_str().unwrap()));
 				}
 			}else if caminho_arquivo.is_dir(){
-				if !read_dir_recursive(caminho_arquivo, vetor_erro, tx1.clone()){
+				if !read_dir_recursive(caminho_arquivo, vetor_erro, tx1.clone(), bufterminal){
 					return false;
 				}
 			}
@@ -127,7 +131,7 @@ fn singlebuff(string: &str, tamanho: u64)-> MPSCDATA{
 }
 
 //true se foi enviado, false se não
-fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>)-> bool{
+fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)-> bool{
 
 	//testando a existência do arquivo
 	if let Ok(tt) = caminho.try_exists(){
@@ -145,7 +149,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>)-> bool{
 	//tentando abrir o arquivo
 	let opt = match File::open(caminho){
 		Ok(arquivo)=> {
-			println!("Arquivo: {caminho_str} --> OK!",);
+			bufterminal.escreve(format!("Arquivo: {caminho_str} --> OK!").as_str());
 			Some(arquivo)
 		},
 		Err(erro)=>{
@@ -166,7 +170,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>)-> bool{
 	//extraindo o arquivo
 	let mut file = opt.unwrap();
 
-	print!("Enviando arquivo... ");
+	bufterminal.escreve("  Enviando...\r\n");
 
 	//precisamos enviar a quebra de linha \r\n junto
 	let nome_com_quebra = format!("{}\r\n",caminho_str.strip_prefix(PASTAENVIO).unwrap());//removendo "enviar/"
@@ -175,7 +179,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>)-> bool{
 	let metadata = file.metadata().expect("Não foi possível ler o tamanho do arquivo"); // Obtém as metainformações do arquivo
 	let tamanho_arquivo: u64 = metadata.len(); // Retorna o tamanho do arquivo
 
-	//gerando um buffer para o TCP
+	//gerando um buffer de cabeçalho para o TCP
 	let (primeirobuff,tamtotal) = singlebuff(nome_com_quebra.as_str(),tamanho_arquivo);
 	tx1.send((primeirobuff,tamtotal)).expect("Canal fechado antes do primeiro buffer");
 
@@ -207,7 +211,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>)-> bool{
 		}
 	}
 
-	println!("Tempo de envio {:?}", atual.elapsed());
+	bufterminal.escreve(format!("Tempo de envio {:?}\r\n", atual.elapsed()).as_str());
 	return true;
 }
 

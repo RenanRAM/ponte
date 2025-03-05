@@ -54,12 +54,16 @@ impl BufTerminal{
 	}
 }
 
+//desligar a thread automaticamente no drop
 impl Drop for BufTerminal {
 	fn drop(&mut self) {
 		let mut campos = self.texto_desligar.lock().unwrap();
 		campos.1 = true;
-		drop(campos);
-		let _ = self.thread.take().unwrap().join();
+		drop(campos);//precisa disso
+		let status = self.thread.take().unwrap().join();
+		if let Err(_) = status{
+			println!("Erro na thread de BufTerminal");
+		};
 	}
 }
 
