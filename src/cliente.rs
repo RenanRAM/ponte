@@ -92,7 +92,7 @@ pub fn iniciar() -> std::io::Result<()> {
 			println!("{arq}");
 		}
 	}
-	sleep(Duration::from_secs(2));
+
 	Ok(())
 }
 
@@ -176,7 +176,11 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	let nome_com_quebra = format!("{}\r\n",caminho_str.strip_prefix(PASTAENVIO).unwrap());//removendo "enviar/"
 
 	//obtendo o tamanho do arquivo
-	let metadata = file.metadata().expect("Não foi possível ler o tamanho do arquivo"); // Obtém as metainformações do arquivo
+	let metadata = file.metadata();
+	if metadata.is_err(){
+		return false;
+	}
+	let metadata = metadata.expect("Não foi possível ler o tamanho do arquivo"); // Obtém as metainformações do arquivo
 	let tamanho_arquivo: u64 = metadata.len(); // Retorna o tamanho do arquivo
 
 	//gerando um buffer de cabeçalho para o TCP
