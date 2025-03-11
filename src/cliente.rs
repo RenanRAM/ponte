@@ -74,7 +74,12 @@ pub fn iniciar() -> std::io::Result<()> {
 	let bufterminal = BufTerminal::new();
 
 	//lendo a pasta de envio e enviando os dados para a thread1
+	//medindo o tempo que leva
+	let atual = Instant::now();
 	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone(), &bufterminal);
+	let duracao = atual.elapsed();
+	drop(bufterminal);
+	println!("Tempo de envio: {},{}s", duracao.as_secs(), duracao.subsec_millis());
 	if !status{
 		println!("Ocorreu um erro no envio!");
 	}
@@ -184,11 +189,8 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	let tamanho_arquivo: u64 = metadata.len(); // Retorna o tamanho do arquivo
 
 	//gerando um buffer de cabeçalho para o TCP
-	let (primeirobuff,tamtotal) = singlebuff(nome_com_quebra.as_str(),tamanho_arquivo);
-	tx1.send((primeirobuff,tamtotal)).expect("Canal fechado antes do primeiro buffer");
-
-	//medindo o tempo que leva
-	let atual = Instant::now();
+	let primeirobuffdata = singlebuff(nome_com_quebra.as_str(),tamanho_arquivo);
+	tx1.send(primeirobuffdata).expect("Canal fechado antes do primeiro buffer");
 
 	loop{
 		let mut buffer1 = [0u8;BUFFBYTES];
@@ -215,7 +217,6 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 		}
 	}
 
-	bufterminal.escreve(format!("Tempo de envio {:?}\r\n", atual.elapsed()).as_str());
 	return true;
 }
 
