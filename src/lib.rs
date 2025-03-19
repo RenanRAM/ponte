@@ -28,7 +28,10 @@ impl BufTerminal{
 		let texto_desigar = t_d.clone();
 		let thread1 = thread::spawn(move || {
 		loop{
-				let mut campos = t_d.lock().unwrap();
+				let mut campos = t_d.lock().unwrap_or_else(|_| {
+					println!("Erro na execução, poison");
+					process::exit(1);
+				});
 				print!("{}",campos.0);
 				let desligado = campos.1;
 				if desligado{
