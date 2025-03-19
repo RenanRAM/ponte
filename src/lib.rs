@@ -10,20 +10,20 @@ mod servidor;
 mod cliente;
 
 //porta da comunicação
-pub const PORTA: u16 = 7879;
-pub const BUFFBYTES: usize = 8192;
-pub const PASTAENVIO: &str = "enviar/";
-pub const PASTARECEBE: &str = "receber/";
+const PORTA: u16 = 7879;
+const BUFFBYTES: usize = 8192;
+const PASTAENVIO: &str = "enviar/";
+const PASTARECEBE: &str = "receber/";
 const PERIODO_THREAD: u64 = 295;
 
-pub struct BufTerminal{
+struct BufTerminal{
 	thread: OnceCell<JoinHandle<()>>,
 	texto_desligar: Arc<Mutex<(String,bool)>>,
 }
 
 impl BufTerminal{
 
-	pub fn new()-> Self{
+	fn new()-> Self{
 		let t_d = Arc::new(Mutex::new((String::new(), false)));
 		let texto_desigar = t_d.clone();
 		let thread1 = thread::spawn(move || {
@@ -67,6 +67,8 @@ impl Drop for BufTerminal {
 	}
 }
 
+//o comportamento de pub em funções é diferente, funções sem pub não são acessíveis fora do arquivo
+// enquanto struc sem pub ainda pode ser acessada fora do arquivo e em qualquer lugar dentro da crate (src/) do projeto
 //exibe os comandos disponíveis
 pub fn comandos_disponiveis(){
 	println!("Comandos disponíveis:");
@@ -109,13 +111,13 @@ fn verificar_pasta_recebe(){
 	match pasta_receber.try_exists(){
 		Ok(true)=>{
 			if !esta_vazia(pasta_receber){
-				println!("Erro, esvazie a pasta receber antes de executar o programa");
+				println!("Erro, esvazie a pasta {PASTARECEBE} antes de executar o programa");
 				process::exit(0);
 			}
 		},
 		Ok(false)=>{
 			if !criar_pasta(pasta_receber){
-				println!("Erro, Não foi possível criar a pasta para receber os arquivos");
+				println!("Erro, Não foi possível criar a pasta ({PASTARECEBE}) para receber os arquivos");
 				process::exit(0);
 			}
 		}
@@ -137,9 +139,9 @@ fn verificar_pasta_envia(){
 		Ok(false)=>{
 			println!("Atenção, pasta de envio não existe, criando...");
 			if !criar_pasta(pasta_enviar){
-				println!("Erro, não foi possível criar a pasta para enviar arquivos");
+				println!("Erro, não foi possível criar a pasta ({PASTAENVIO}) para enviar arquivos");
 			}else{
-				println!("Adicione arquivos na pasta e execute novamente");
+				println!("Adicione arquivos na pasta {PASTAENVIO} e execute novamente");
 			}
 			process::exit(0);
 		}
