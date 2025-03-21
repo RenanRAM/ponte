@@ -60,8 +60,7 @@ pub fn iniciar() -> std::io::Result<()> {
 		return Err(Error::other("Erro: ip inválido"));
 	};
 	let listener = TcpListener::bind((ipv4, PORTA))?;
-	println!("Servidor da ponte escutando em {input}");
-	println!("Use o ip acima no cliente");
+	println!("Servidor da ponte escutando em {ipv4}, use este ip no cliente/enviar");
 	let (stream , _) = listener.accept().unwrap();
 	println!("Cliente conectado!");
 
