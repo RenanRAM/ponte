@@ -30,7 +30,7 @@ impl Cabecalho {
 		nome = nome.trim_end().to_string();
 
 		//obtendo o tamanho
-		let mut buftamanho = [0u8;8];
+		let mut buftamanho = [0u8;8];//u64
 		reader.read_exact(&mut buftamanho).unwrap();
 		let tamanho: u64 = u64::from_le_bytes(buftamanho);
 		if tamanho > 0{

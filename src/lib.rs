@@ -1,3 +1,15 @@
+//Constantes
+//porta da comunicação
+const PORTA: u16 = 7879;
+//tamanho do buffer de leitura ou escrita
+const BUFFBYTES: usize = 8192;
+//nome da pasta do cliente
+const PASTAENVIO: &str = "enviar/";
+//nome da pasta do servidor
+const PASTARECEBE: &str = "receber/";
+//pariodo de escrita no terminal em milisegundos
+const PERIODO_THREAD: u64 = 295;
+
 use std::path::Path;
 use std::fs;
 use std::process;
@@ -8,13 +20,6 @@ use std::sync::{Arc, Mutex};
 
 mod servidor;
 mod cliente;
-
-//porta da comunicação
-const PORTA: u16 = 7879;
-const BUFFBYTES: usize = 8192;
-const PASTAENVIO: &str = "enviar/";
-const PASTARECEBE: &str = "receber/";
-const PERIODO_THREAD: u64 = 295;
 
 struct BufTerminal{
 	thread: OnceCell<JoinHandle<()>>,

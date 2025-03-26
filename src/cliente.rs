@@ -147,7 +147,9 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 			return false;
 		}
 	}else{
-		panic!("Erro ao verificar o arquivo");
+		//erro tolerável
+		println!("Erro ao verificar um arquivo");
+		return false;
 	}
 
 	//obtendo uma &str
@@ -162,10 +164,10 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 		Err(erro)=>{
 			match erro.kind(){
 				ErrorKind::PermissionDenied=>{
-					println!("Sem permissão para abrir o arquivo");
+					println!("Sem permissão para abrir o arquivo: {caminho_str}");
 				},
 				ErrorKind::NotFound=>{
-					println!("Não encontrado");
+					println!("Não encontrado: {caminho_str}");
 				},
 				_=>(),
 			}
@@ -177,18 +179,19 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	//extraindo o arquivo
 	let mut file = opt.unwrap();
 
-	bufterminal.escreve("  Enviando...\r\n");
-
 	//precisamos enviar a quebra de linha \r\n junto
 	let nome_com_quebra = format!("{}\r\n",caminho_str.strip_prefix(PASTAENVIO).unwrap());//removendo "enviar/"
 
 	//obtendo o tamanho do arquivo
 	let metadata = file.metadata();
 	if metadata.is_err(){
+		bufterminal.escreve("Não foi possível ler o tamanho do arquivo\r\n");
 		return false;
 	}
 	let metadata = metadata.expect("Não foi possível ler o tamanho do arquivo"); // Obtém as metainformações do arquivo
 	let tamanho_arquivo: u64 = metadata.len(); // Retorna o tamanho do arquivo
+
+	bufterminal.escreve("  Enviando...\r\n");
 
 	//gerando um buffer de cabeçalho para o TCP
 	let primeirobuffdata = singlebuff(nome_com_quebra.as_str(),tamanho_arquivo);
