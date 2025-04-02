@@ -93,13 +93,8 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 	// usando buffwritrer
 	let mut file = BufWriter::with_capacity(2*BUFFBYTES,file);
 
-	//criando canal
-	//let (tx1,rx1) = sync_channel(100);
-
 	//contador do tamanho u64
 	let mut tamanho_restante = cab.tamanho;
-
-	//TODO:testar sem criar uma nova thread, modo síncrono
 
 	//escrevendo no arquivo
 	let mut limite: usize;
@@ -117,92 +112,3 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 		}
 	}
 }
-
-/* Antigo, único arquivo
-pub fn iniciar() -> std::io::Result<()> {
-
-	let mut input = String::new();
-	println!("Digite o ip deste computador, ex: 127.0.0.1 para localhost");
-
-	let mut stdin = io::stdin().lock();
-	stdin.read_line(&mut input).unwrap();
-	input.truncate(input.len()-2);
-	let Ok(ipv4) = Ipv4Addr::from_str(input.as_str())
-	else{
-		println!("O ip digitado não é válido");
-		return Err(Error::other("Erro: ip inválido"));
-	};
-	let listener = TcpListener::bind((ipv4, 7879u16))?;
-	println!("Servidor escutando em {input}");
-	let (stream , _) = listener.accept().unwrap();
-	println!("Cliente conectado!");
-
-	//receber as informações
-	let tempo = handle_client(stream);
-	println!("Tempo de recebimento {:?}", tempo);
-	sleep(Duration::from_secs(3));
-	Ok(())
-}
-
-fn handle_client(stream: TcpStream)->Duration {
-	let mut reader = BufReader::new(stream);
-	let mut nome = String::new();
-	let _ = reader.read_line(&mut nome).unwrap();
-	if nome.is_empty(){
-		println!("O cliente desconectou");
-		process::exit(1);
-	}
-
-	nome.truncate(nome.len()-2);
-	println!("Nome do arquivo: {nome}");
-
-	//obtendo o tamanho
-	let mut buftamanho = [0u8;8];
-	reader.read(&mut buftamanho).unwrap();
-	let tamanho: u64 = u64::from_le_bytes(buftamanho);
-	println!("Tamanho do arquivo {tamanho}");
-
-	let atual = Instant::now();
-
-	let mut file = File::create_new(nome.as_str()).expect("Não foi possível criar o arquivo");
-	let tamanhobuff = mem::size_of::<([u8; 8192],usize)>();
-	let (tx1,rx1) = sync_channel(tamanhobuff);
-
-	let mut conta_tamanho = 0u64; 
-	//leitor ftp
-	thread::spawn(move ||{
-		let mut buffer8k = [0u8;8192];
-		loop{
-			if let Ok(n) = reader.read(&mut buffer8k){
-				tx1.send((buffer8k,n)).expect("Canal fechado antes da hora");
-				if n==0{
-					break;
-				}
-			}else{
-				panic!("Erro na leitura");
-			}
-		}
-	});
-
-	//criador de arquivo
-	loop{
-		if let Ok((buff,n)) = rx1.recv(){
-			conta_tamanho += n as u64;//Ok a contagem de tamanho está exatamente igual
-			if n == 0{
-				break;//fim da leitura
-			}
-			file.write_all(&buff[..n]).expect("Erro na escrita");
-		}else{
-			panic!("Canal fechado devido a erro na leitura");
-		}
-	}
-
-	println!("Tamanho contado {conta_tamanho}");
-	if conta_tamanho == tamanho{
-		println!("Tamanho confere");
-	}else{
-		println!("Tamanho diferente");
-	}
-	atual.elapsed()
-}
-*/
