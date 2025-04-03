@@ -9,7 +9,7 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
-use crate::{PORTA,BUFFBYTES,PASTAENVIO,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,BufTerminal};
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 
@@ -35,6 +35,8 @@ pub fn iniciar() -> std::io::Result<()> {
 	let socaddrv4 = SocketAddr::from(SocketAddrV4::new(ipv4, PORTA));
 
 	let mut stream = TcpStream::connect_timeout(&socaddrv4, Duration::from_millis(3200))?;
+	let _ = stream.set_ttl(TTL_CLIENT);
+
 	println!("Conectado ao servidor!");
 
 	//criando o canal:

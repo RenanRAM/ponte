@@ -9,6 +9,8 @@ const PASTAENVIO: &str = "enviar/";
 const PASTARECEBE: &str = "receber/";
 //pariodo de escrita no terminal em milisegundos
 const PERIODO_THREAD: u64 = 295;
+//TTL para o cliente
+const TTL_CLIENT: u32 = 6;
 
 use std::path::Path;
 use std::fs;
