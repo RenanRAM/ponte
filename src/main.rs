@@ -1,5 +1,4 @@
-use std::env;
-use std::process;
+use std::{env,process};
 use ponte::*;
 
 //ok: Cliente: Separar a thread de envio stream TCP da função envio recursivo, criar ela antes do loop
