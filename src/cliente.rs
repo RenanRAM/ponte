@@ -79,7 +79,6 @@ pub fn iniciar() -> std::io::Result<()> {
 	//medindo o tempo que leva
 	let atual = Instant::now();
 	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone(), &bufterminal);
-	drop(bufterminal);
 
 	//sinalizando o fim para o servidor
 	let (ultimobuff,tamanhototal) = singlebuff("FIM\r\n",0u64);
@@ -89,7 +88,8 @@ pub fn iniciar() -> std::io::Result<()> {
 
 	//print do tempo de envio
 	let duracao = atual.elapsed();
-	println!("Tempo de envio: {},{}s", duracao.as_secs(), duracao.subsec_millis());
+	drop(bufterminal);//encerra e espera os últimos prints do terminal
+	println!("Tempo de envio: {},{:0>3}s", duracao.as_secs(), duracao.subsec_millis());
 	if !status{
 		println!("Ocorreu um erro no envio!");
 	}
