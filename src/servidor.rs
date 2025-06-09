@@ -40,6 +40,7 @@ impl Cabecalho {
 				tamanho
 			})
 		}else{
+			//println!("FIM>>>> Nome completo: {nome}  Tamanho: {tamanho}b\r\n");
 			None
 		}
 	}
