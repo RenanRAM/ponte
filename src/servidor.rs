@@ -8,7 +8,7 @@ use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,BufTerminal};
 
 type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
@@ -33,15 +33,16 @@ impl Cabecalho {
 		let mut buftamanho = [0u8;8];//u64
 		reader.read_exact(&mut buftamanho).unwrap();
 		let tamanho: u64 = u64::from_le_bytes(buftamanho);
-		if tamanho > 0{
+		if tamanho == 0 && nome.as_str() == FINAL_FLAG{
+			//flag de final da transmissão //println!("FIM>>>> Nome completo: {nome}  Tamanho: {tamanho}b\r\n");
+			None
+		}else{
 			buf_terminal.escreve(format!("Nome completo: {nome}  Tamanho: {tamanho}b\r\n").as_str());
 			Some(Self{
 				nome,
 				tamanho
 			})
-		}else{
-			//println!("FIM>>>> Nome completo: {nome}  Tamanho: {tamanho}b\r\n");
-			None
+
 		}
 	}
 }

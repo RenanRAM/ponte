@@ -9,7 +9,7 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
-use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal};
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 
@@ -81,7 +81,8 @@ pub fn iniciar() -> std::io::Result<()> {
 	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone(), &bufterminal);
 
 	//sinalizando o fim para o servidor
-	let (ultimobuff,tamanhototal) = singlebuff("FIM\r\n",0u64);
+	let flag = format!("{}\r\n",FINAL_FLAG);
+	let (ultimobuff,tamanhototal) = singlebuff(&flag,0u64);
 	tx1.send((ultimobuff,tamanhototal)).expect("Canal fechado antes do ultimo buffer");
 	drop(tx1);//drop de tx1 encerra do loop da thread1
 	thread1.join().expect("Erro na thread");

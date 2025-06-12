@@ -12,6 +12,9 @@ const PERIODO_THREAD: u64 = 295;
 //TTL para o cliente
 const TTL_CLIENT: u32 = 6;
 
+//flag final de transmissão
+const FINAL_FLAG: &str = "fimflag....";
+
 use std::path::Path;
 use std::fs;
 use std::process;
