@@ -6,13 +6,14 @@ use ponte::*;
 //ok: testar a escrita de arquivos do servidor sem criar uma nova thread, modo síncrono
 //ok: Tratar o erro com um arquivo específico sem parar todo programa, apenas não enviar aquele arquivo se for o caso e exibir todos os arquivos não enviados no final
 //ok: fazer o envio de todas pastas e subpastas de modo recursivo
-//TODO URGENTE: melhorar a flag de final de envio, auguns arquivos reais já tem tamanho 0 e estão causando a finalização do envio de forma incorreta!!!!!!
+//ok: melhorar a flag de final de envio, auguns arquivos reais já tem tamanho 0 e estão causando a finalização do envio de forma incorreta!!!!!!
 fn main() {
 
 	//extraindo argumentos
 	let mut argumentos = env::args();
 	argumentos.next();
 	let modo = argumentos.next().unwrap_or_else(||{
+		println!("{}: v{}",env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
 		comandos_disponiveis();
 		process::exit(0);
 	});
