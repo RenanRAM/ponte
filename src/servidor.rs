@@ -34,7 +34,6 @@ impl Cabecalho {
 		reader.read_exact(&mut buftamanho).unwrap();
 		let tamanho: u64 = u64::from_le_bytes(buftamanho);
 		if tamanho == 0 && nome.as_str() == FINAL_FLAG{
-			//flag de final da transmissão //println!("FIM>>>> Nome completo: {nome}  Tamanho: {tamanho}b\r\n");
 			None
 		}else{
 			buf_terminal.escreve(format!("Nome completo: {nome}  Tamanho: {tamanho}b\r\n").as_str());
@@ -92,8 +91,12 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 	
 	//criando o arquivo
 	let file = File::create_new(nome_com_caminho).expect("Não foi possível criar um arquivo, abortando!");
+
+	//alocando o tamanho total do arquivo
+	let _ = file.set_len(cab.tamanho);
+
 	// usando buffwritrer
-	let mut file = BufWriter::with_capacity(2*BUFFBYTES,file);
+	let mut file = BufWriter::with_capacity(8*BUFFBYTES,file);
 
 	//contador do tamanho u64
 	let mut tamanho_restante = cab.tamanho;
