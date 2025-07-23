@@ -8,7 +8,7 @@ use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LINIT,BufTerminal};
 
 type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
@@ -92,8 +92,10 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 	//criando o arquivo
 	let file = File::create_new(nome_com_caminho).expect("Não foi possível criar um arquivo, abortando!");
 
-	//alocando o tamanho total do arquivo
-	let _ = file.set_len(cab.tamanho);
+	if cab.tamanho <= SET_LEN_LINIT{
+		//alocando o tamanho total do arquivo
+		let _ = file.set_len(cab.tamanho);
+	}
 
 	// usando buffwritrer
 	let mut file = BufWriter::with_capacity(8*BUFFBYTES,file);

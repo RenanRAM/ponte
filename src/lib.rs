@@ -11,6 +11,8 @@ const PASTARECEBE: &str = "receber/";
 const PERIODO_THREAD: u64 = 295;
 //TTL para o cliente
 const TTL_CLIENT: u32 = 6;
+//limite de set_len
+const SET_LEN_LINIT: u64 = 50000000;
 
 //flag final de transmissão, a anteração dessa constante nunca deve ser feita em uma mesma versão, se alterar é preciso criar outra versão no git, pois os programas serão incompatíveis
 const FINAL_FLAG: &str = "fimflag....";
