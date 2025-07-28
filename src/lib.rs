@@ -106,10 +106,10 @@ pub fn inicia_cliente(){
 	}
 }
 
-pub fn inicia_servidor(){
+pub fn inicia_servidor(auto_ip: bool){
 	verificar_pasta_recebe();
 	println!("----Modo de recebimento----");
-	let status = servidor::iniciar();
+	let status = servidor::iniciar(auto_ip);
 	match status{
 		Ok(_)=>{
 			println!("Recebimento finalizado com sucesso");

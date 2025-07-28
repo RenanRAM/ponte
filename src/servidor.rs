@@ -10,6 +10,8 @@ use std::io::Error;
 use std::cmp::min;
 use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LINIT,BufTerminal};
 
+use get_if_addrs::{IfAddr,get_if_addrs};
+
 type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
 struct Cabecalho{
@@ -41,25 +43,31 @@ impl Cabecalho {
 				nome,
 				tamanho
 			})
-
 		}
 	}
 }
 
 //inicia o servidor, função a ser chamada no main
-pub fn iniciar() -> std::io::Result<()> {
+pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 
-	let mut input = String::new();
-	println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
+	let mut ipv4:Option<Ipv4Addr> = None;
+	
+	//condição de auto ip
+	if auto_ip{
+		ipv4 = obter_ip_unico();
+	}
 
-	let mut stdin = io::stdin().lock();
-	stdin.read_line(&mut input).unwrap();
+	//pedir ip caso ainda não tenha nada
+	if ipv4.is_none(){
+		ipv4 = pedir_ip();
+	}
 
-	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
-	else{
-		println!("O ip digitado não é válido");
+	//não foi obtido qualquer ip, abortar
+	if ipv4.is_none(){
 		return Err(Error::other("Erro: ip inválido"));
-	};
+	}
+		
+	let ipv4 = ipv4.unwrap();
 	let listener = TcpListener::bind((ipv4, PORTA))?;
 	println!("Servidor da ponte escutando em {ipv4}, use este ip no cliente/enviar");
 	let (stream , _) = listener.accept().unwrap();
@@ -117,5 +125,49 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 		}else{
 			panic!("Erro na leitura");
 		}
+	}
+}
+
+fn pedir_ip() -> Option<Ipv4Addr> {
+	let mut input = String::new();
+	println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
+
+	let mut stdin = io::stdin().lock();
+	stdin.read_line(&mut input).unwrap();
+
+	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
+	else{
+		println!("O ip digitado não é válido");
+		return None;
+	};
+	Some(ipv4)
+}
+
+fn obter_ip_unico() -> Option<Ipv4Addr> {
+	let ifaces = get_if_addrs().expect("Erro ao percorrer interfaces de ip");
+	let mut retorno_unico:Option<Ipv4Addr> = None;
+
+	for iface in ifaces{
+		if iface.is_loopback() {continue;}
+		if let IfAddr::V4(ipv4) = iface.addr{
+			if retorno_unico.is_none() {
+				retorno_unico = Some(ipv4.ip);
+			}else{
+				return None;
+			}
+		}
+	}
+
+	retorno_unico
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn teste_de_ip() {
+		//coloque o ip do computador antes de testar
+		assert_eq!(obter_ip_unico(), Some(Ipv4Addr::new(192,168,0,108)));
 	}
 }

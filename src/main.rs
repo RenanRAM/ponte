@@ -18,10 +18,15 @@ fn main() {
 		process::exit(0);
 	});
 
+	let auto_ip:bool = match argumentos.next(){
+		Some(valor) => valor.as_str() == "--auto",
+		None => false
+	};
+
 	//selecionando modo
 	match modo.as_str(){
 		"receber"=>{
-			inicia_servidor();
+			inicia_servidor(auto_ip);
 		},
 		"enviar"=>{
 			inicia_cliente();
