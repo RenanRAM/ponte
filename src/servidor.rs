@@ -8,7 +8,7 @@ use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LINIT,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal};
 
 use get_if_addrs::{IfAddr,get_if_addrs};
 
@@ -100,7 +100,7 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 	//criando o arquivo
 	let file = File::create_new(nome_com_caminho).expect("Não foi possível criar um arquivo, abortando!");
 
-	if cab.tamanho <= SET_LEN_LINIT{
+	if cab.tamanho <= SET_LEN_LIMIT{
 		//alocando o tamanho total do arquivo
 		let _ = file.set_len(cab.tamanho);
 	}

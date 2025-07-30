@@ -12,9 +12,9 @@ const PERIODO_THREAD: u64 = 295;
 //TTL para o cliente
 const TTL_CLIENT: u32 = 6;
 //limite de set_len
-const SET_LEN_LINIT: u64 = 50000000;
+const SET_LEN_LIMIT: u64 = 50000000;
 
-//flag final de transmissão, a anteração dessa constante nunca deve ser feita em uma mesma versão, se alterar é preciso criar outra versão no git, pois os programas serão incompatíveis
+//flag final de transmissão, a alteração dessa constante nunca deve ser feita em uma mesma versão, se alterar é preciso criar outra versão no git, pois os programas serão incompatíveis
 const FINAL_FLAG: &str = "fimflag....";
 
 use std::path::Path;
@@ -45,8 +45,7 @@ impl BufTerminal{
 					process::exit(1);
 				});
 				print!("{}",campos.0);
-				let desligado = campos.1;
-				if desligado{
+				if campos.1{//true para desligar
 					println!("Desligando...");
 					break;
 				}
@@ -74,7 +73,7 @@ impl Drop for BufTerminal {
 	fn drop(&mut self) {
 		let mut campos = self.texto_desligar.lock().unwrap();
 		campos.1 = true;
-		drop(campos);//precisa disso
+		drop(campos);//precisa disso para liberar o lock
 		let status = self.thread.take().unwrap().join();
 		if let Err(_) = status{
 			println!("Erro na thread de BufTerminal");
@@ -84,11 +83,12 @@ impl Drop for BufTerminal {
 
 //o comportamento de pub em funções é diferente, funções sem pub não são acessíveis fora do arquivo
 // enquanto struc sem pub ainda pode ser acessada fora do arquivo e em qualquer lugar dentro da crate (src/) do projeto
+
 //exibe os comandos disponíveis
 pub fn comandos_disponiveis(){
 	println!("Comandos disponíveis:");
 	println!("enviar");
-	println!("receber");
+	println!("receber [--auto]");
 }
 
 //funções de início
@@ -147,7 +147,7 @@ fn verificar_pasta_envia(){
 	match pasta_enviar.try_exists(){
 		Ok(true)=>{
 			if esta_vazia(pasta_enviar){
-				println!("Erro, não há arquivos para enviar");
+				println!("Não há arquivos para enviar");
 				process::exit(0);
 			}
 		},
