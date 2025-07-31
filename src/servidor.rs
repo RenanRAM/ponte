@@ -1,14 +1,14 @@
 use std::net::{TcpListener, TcpStream,Ipv4Addr};
-use std::io::{self,BufReader,BufRead,Read,Write,BufWriter};
+use std::io::{BufReader,BufRead,Read,Write,BufWriter};
 use std::fs::{self,File};
-use std::str::FromStr;
 use std::path::PathBuf;
+use std::str::FromStr;
 //use std::time::Instant;
 use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip};
 
 use get_if_addrs::{IfAddr,get_if_addrs};
 
@@ -59,6 +59,7 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 
 	//pedir ip caso ainda não tenha nada
 	if ipv4.is_none(){
+		println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
 		ipv4 = pedir_ip();
 	}
 
@@ -126,21 +127,6 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 			panic!("Erro na leitura");
 		}
 	}
-}
-
-fn pedir_ip() -> Option<Ipv4Addr> {
-	let mut input = String::new();
-	println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
-
-	let mut stdin = io::stdin().lock();
-	stdin.read_line(&mut input).unwrap();
-
-	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
-	else{
-		println!("O ip digitado não é válido");
-		return None;
-	};
-	Some(ipv4)
 }
 
 fn obter_ip_unico() -> Option<Ipv4Addr> {

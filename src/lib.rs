@@ -24,6 +24,9 @@ use std::thread::{self,JoinHandle};
 use std::cell::OnceCell;
 use std::time::Duration;
 use std::sync::{Arc, Mutex};
+use std::net::Ipv4Addr;
+use std::io::{self,BufRead};
+use std::str::FromStr;
 
 mod servidor;
 mod cliente;
@@ -181,4 +184,17 @@ fn criar_pasta(pasta: &Path)->bool{
 fn esta_vazia(pasta: &Path) -> bool {
 	let mut entries = fs::read_dir(pasta).unwrap();
 	entries.next().is_none()// Retorna `true` se não houver arquivos
+}
+
+fn pedir_ip() -> Option<Ipv4Addr> {
+	let mut input = String::new();
+	let mut stdin = io::stdin().lock();
+	stdin.read_line(&mut input).unwrap();
+
+	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
+	else{
+		println!("O ip digitado não é válido");
+		return None;
+	};
+	Some(ipv4)
 }

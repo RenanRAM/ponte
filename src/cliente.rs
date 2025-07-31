@@ -1,5 +1,5 @@
-use std::io::{self,BufRead,Write,Read,ErrorKind};
-use std::net::{TcpStream,Ipv4Addr,SocketAddrV4,SocketAddr};
+use std::io::{Write,Read,ErrorKind};
+use std::net::{TcpStream,SocketAddrV4,SocketAddr};
 use std::str::FromStr;
 use std::path::Path;
 use std::fs::File;
@@ -9,7 +9,7 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
-use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal};
+use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal,pedir_ip};
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 
@@ -19,20 +19,14 @@ pub fn iniciar() -> std::io::Result<()> {
 	//vetor para armazenar os não enviados por qualquer erro
 	let mut nao_enviados: Vec<String> = Vec::new();
 
-	//input de texto do terminal
-	let mut input = String::new();
 	println!("Digite o ip do servidor, ex: 127.0.0.1");
-	let mut stdin = io::stdin().lock();
-	stdin.read_line(&mut input).unwrap();
-	
-	//interpretando como ipv4, usando trim para cortar quebras de linha e já retornando &str
-	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
-	else{
-		println!("O IP digitado é inválido");
-		process::exit(0);
-	};
+	let optipv4 = pedir_ip();
 
-	let socaddrv4 = SocketAddr::from(SocketAddrV4::new(ipv4, PORTA));
+	if optipv4.is_none(){
+		process::exit(0);
+	}
+
+	let socaddrv4 = SocketAddr::from(SocketAddrV4::new(optipv4.unwrap(), PORTA));
 
 	let mut stream = TcpStream::connect_timeout(&socaddrv4, Duration::from_millis(3200))?;
 	let _ = stream.set_ttl(TTL_CLIENT);
