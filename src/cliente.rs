@@ -38,9 +38,9 @@ pub fn iniciar() -> std::io::Result<()> {
 	//criar o canal MPSC aqui, logo depois criar a thread separada de envio TCP
 	let (tx1,rx1) = sync_channel::<MPSCDATA>(100);
 
-	//envio TCP
+	//thread de envio TCP
 	let thread1 = thread::spawn(move || {
-		loop {
+		'principal: loop {
 			if let Ok((dados,n)) = rx1.recv(){
 				loop{
 					//tentando escrever tudo
@@ -54,7 +54,10 @@ pub fn iniciar() -> std::io::Result<()> {
 									sleep(Duration::from_millis(110));
 								},
 								_=>{
-									panic!("Erro fatal no envio {e:?}");
+									println!("Erro fatal no envio {e:?}");
+									sleep(Duration::from_millis(500));
+									println!("A transferência foi corrompida!");
+									break 'principal;
 								}
 							}
 						}

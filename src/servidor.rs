@@ -81,12 +81,15 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 
 	//lendo stream e criando arquivos
 	while let Some(cab) = Cabecalho::obter(&mut reader, &buf_terminal){
-		criar_arquivo(cab, &mut reader);
+		if !criar_arquivo(cab, &mut reader){
+			println!("Ocorreu um erro na transferência!");
+			return Err(Error::other("Erro na transferência: envio incompleto"));
+		}
 	}
 	Ok(())
 }
 
-fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
+fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 	//agora o nome contem os diretórios
 	let mut nome_com_caminho = PathBuf::from_str(PASTARECEBE).unwrap();
 
@@ -124,9 +127,10 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb){
 				break;
 			}
 		}else{
-			panic!("Erro na leitura");
+			return false;
 		}
 	}
+	return true;
 }
 
 fn obter_ip_unico() -> Option<Ipv4Addr> {
