@@ -148,7 +148,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 		}
 	}else{
 		//erro tolerável
-		println!("Erro ao verificar um arquivo");
+		println!("Erro ao verificar arquivo {}",caminho.file_name().unwrap().to_str().unwrap());
 		return false;
 	}
 
