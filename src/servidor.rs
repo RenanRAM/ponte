@@ -134,8 +134,13 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 }
 
 fn obter_ip_unico() -> Option<Ipv4Addr> {
-	let ifaces = get_if_addrs().expect("Erro ao percorrer interfaces de ip");
-	let mut retorno_unico:Option<Ipv4Addr> = None;
+	let Ok(ifaces) = get_if_addrs()
+	else{
+		println!("Erro ao percorrer interfaces de ip");
+		return None;
+	};
+
+	let mut retorno_unico: Option<Ipv4Addr> = None;
 
 	for iface in ifaces{
 		if iface.is_loopback() {continue;}
