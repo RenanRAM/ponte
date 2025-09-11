@@ -1,9 +1,8 @@
 use std::net::{TcpListener, TcpStream,Ipv4Addr};
 use std::io::{BufReader,BufRead,Read,Write,BufWriter};
 use std::fs::{self,File};
-use std::path::PathBuf;
+use std::path::{PathBuf,Path};
 use std::str::FromStr;
-//use std::time::Instant;
 use std::process;
 use std::io::Error;
 
@@ -102,7 +101,7 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 	}
 	
 	//criando o arquivo
-	let file = File::create_new(nome_com_caminho).expect("Não foi possível criar um arquivo, abortando!");
+	let file = File::create_new(nome_com_caminho.as_path()).expect("Não foi possível criar um arquivo, abortando!");
 
 	if cab.tamanho <= SET_LEN_LIMIT{
 		//alocando o tamanho total do arquivo
@@ -122,7 +121,12 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 		limite = min(BUFFBYTES as u64, tamanho_restante) as usize;
 		if let Ok(n) = reader.read(&mut buffer8k[..limite]){
 			tamanho_restante -= n as u64;//Ok a contagem de tamanho está exatamente igual
-			file.write_all(&buffer8k[..n]).expect("Erro na escrita");
+			if let Err(_) = file.write_all(&buffer8k[..n]){
+				drop(file);
+				println!("Erro na escrita");
+				anvancar_corrompido(nome_com_caminho.as_path(), tamanho_restante, reader);
+				break;
+			};
 			if tamanho_restante == 0{
 				break;
 			}
@@ -131,6 +135,41 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 		}
 	}
 	return true;
+}
+
+fn anvancar_corrompido(nome_antigo: &Path, mut tam_restante: u64, stream: &mut Arcmb){
+
+	let filename: &str = nome_antigo.file_name().unwrap().to_str().unwrap();
+	let mut novo_nome = String::new();
+	let mut aux = String::from(".");
+	let (nome, ext) = if filename.contains("."){
+		let (n,e) = filename.split_once(".").unwrap();
+		aux.push_str(e);
+		(n, aux.as_str())
+	}else{
+		(filename, "")
+	};
+	novo_nome.push_str(nome);
+	novo_nome.push_str("(corrompido)");
+	novo_nome.push_str(ext);
+	let novo_nome_completo = nome_antigo.with_file_name(&novo_nome);
+
+	let _ = fs::rename(nome_antigo, novo_nome_completo);
+	
+	//avançar o ponteiro da stream
+	let mut limite: usize;
+	let mut buffer8k = [0u8;BUFFBYTES];
+	loop{
+		limite = min(BUFFBYTES as u64, tam_restante) as usize;
+		if let Ok(n) = stream.read(&mut buffer8k[..limite]){
+			tam_restante -= n as u64;
+			if tam_restante == 0{
+				break;
+			}
+		}else{
+			panic!("Erro fatal")
+		}
+	}
 }
 
 fn obter_ip_unico() -> Option<Ipv4Addr> {
