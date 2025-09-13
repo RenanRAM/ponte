@@ -140,18 +140,7 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 fn anvancar_corrompido(nome_antigo: &Path, mut tam_restante: u64, stream: &mut Arcmb){
 
 	let filename: &str = nome_antigo.file_name().unwrap().to_str().unwrap();
-	let mut novo_nome = String::new();
-	let mut aux = String::from(".");
-	let (nome, ext) = if filename.contains("."){
-		let (n,e) = filename.split_once(".").unwrap();
-		aux.push_str(e);
-		(n, aux.as_str())
-	}else{
-		(filename, "")
-	};
-	novo_nome.push_str(nome);
-	novo_nome.push_str("(corrompido)");
-	novo_nome.push_str(ext);
+	let novo_nome = nome_corrompido(filename);
 	let novo_nome_completo = nome_antigo.with_file_name(&novo_nome);
 
 	let _ = fs::rename(nome_antigo, novo_nome_completo);
@@ -195,6 +184,21 @@ fn obter_ip_unico() -> Option<Ipv4Addr> {
 	retorno_unico
 }
 
+fn nome_corrompido(nome: &str) -> String{
+
+	let mut novo_nome = String::new();
+	let (nome_split, ext) = if nome.contains("."){
+		//separa exatamente o nome antes do . a extenão com . antes
+		nome.split_at(nome.find(".").unwrap())
+	}else{
+		(nome, "")
+	};
+	novo_nome.push_str(nome_split);
+	novo_nome.push_str("(corrompido)");
+	novo_nome.push_str(ext);
+	return novo_nome;
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -203,5 +207,23 @@ mod tests {
 	fn teste_de_ip() {
 		//coloque o ip do computador antes de testar
 		assert_eq!(obter_ip_unico(), Some(Ipv4Addr::new(192,168,0,108)));
+	}
+
+	#[test]
+	fn teste_nome_corrompido0() {
+		let novo_nome = nome_corrompido("arquivo");
+		assert_eq!(novo_nome.as_str(), "arquivo(corrompido)");
+	}
+
+	#[test]
+	fn teste_nome_corrompido1() {
+		let novo_nome = nome_corrompido("arquivo.txt");
+		assert_eq!(novo_nome.as_str(), "arquivo(corrompido).txt");
+	}
+
+	#[test]
+	fn teste_nome_corrompido2() {
+		let novo_nome = nome_corrompido("arquivo.txt.ggt");
+		assert_eq!(novo_nome.as_str(), "arquivo(corrompido).txt.ggt");
 	}
 }
