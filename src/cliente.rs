@@ -152,8 +152,8 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 		return false;
 	}
 
-	//obtendo uma &str
-	let caminho_str = caminho.to_str().unwrap();
+	//obtendo uma &str já removendo a PASTAENVIO no início
+	let caminho_str = caminho.to_str().unwrap().strip_prefix(PASTAENVIO).unwrap();
 
 	//tentando abrir o arquivo
 	let opt = match File::open(caminho){
@@ -180,7 +180,7 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	let mut file = opt.unwrap();
 
 	//precisamos enviar a quebra de linha \r\n junto
-	let nome_com_quebra = format!("{}\r\n",caminho_str.strip_prefix(PASTAENVIO).unwrap());//removendo "enviar/"
+	let nome_com_quebra = format!("{}\r\n",caminho_str);//removendo "enviar/"
 
 	//obtendo o tamanho do arquivo
 	let metadata = file.metadata();

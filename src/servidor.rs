@@ -1,4 +1,4 @@
-use std::net::{TcpListener, TcpStream,Ipv4Addr};
+use std::net::{TcpListener, TcpStream,Ipv4Addr,SocketAddr};
 use std::io::{BufReader,BufRead,Read,Write,BufWriter};
 use std::fs::{self,File};
 use std::path::{PathBuf,Path};
@@ -70,8 +70,16 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 	let ipv4 = ipv4.unwrap();
 	let listener = TcpListener::bind((ipv4, PORTA))?;
 	println!("Servidor da ponte escutando em {ipv4}, use este ip no cliente/enviar");
-	let (stream , _) = listener.accept().unwrap();
-	println!("Cliente conectado!");
+	let (stream , soc) = listener.accept().unwrap();
+	print!("Cliente conectado! ");
+	match soc{
+		SocketAddr::V4(socv4) =>{
+			println!("ip(v4): {}", socv4.ip());
+		},
+		SocketAddr::V6(socv6) =>{
+			println!("ip(v6): {}", socv6.ip());
+		},
+	}
 
 	let mut reader = BufReader::new(stream);
 
