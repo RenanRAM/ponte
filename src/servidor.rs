@@ -96,6 +96,7 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 	Ok(())
 }
 
+//retorna false em caso de erro fatal
 fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 	//agora o nome contem os diretórios
 	let mut nome_com_caminho = PathBuf::from_str(PASTARECEBE).unwrap();
@@ -109,7 +110,11 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 	}
 	
 	//criando o arquivo
-	let file = File::create_new(nome_com_caminho.as_path()).expect("Não foi possível criar um arquivo, abortando!");
+	let Ok(file) = File::create_new(nome_com_caminho.as_path())
+	else{
+		println!("Não foi possível criar um arquivo, abortando!");
+		return false;
+	};
 
 	if cab.tamanho <= SET_LEN_LIMIT{
 		//alocando o tamanho total do arquivo
