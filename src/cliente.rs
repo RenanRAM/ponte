@@ -1,10 +1,8 @@
 use std::io::{Write,Read,ErrorKind};
 use std::net::{TcpStream,SocketAddrV4,SocketAddr};
-use std::str::FromStr;
 use std::path::Path;
 use std::fs::File;
 use std::thread;
-use std::path::PathBuf;
 use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
@@ -75,7 +73,8 @@ pub fn iniciar() -> std::io::Result<()> {
 	//lendo a pasta de envio e enviando os dados para a thread1
 	//medindo o tempo que leva
 	let atual = Instant::now();
-	let status = read_dir_recursive(PathBuf::from_str(PASTAENVIO).unwrap(), &mut nao_enviados, tx1.clone(), &bufterminal);
+
+	let status = read_dir_recursive(Path::new(PASTAENVIO), &mut nao_enviados, tx1.clone(), &bufterminal);
 
 	//sinalizando o fim para o servidor
 	let flag = format!("{}\r\n",FINAL_FLAG);
@@ -104,7 +103,7 @@ pub fn iniciar() -> std::io::Result<()> {
 }
 
 //true = ok, false = erro, faz a leitura dos diretórios e envia todos os arquivos
-fn read_dir_recursive(dir: PathBuf, vetor_erro: &mut Vec<String>, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)->bool{//funcionando
+fn read_dir_recursive(dir: &Path, vetor_erro: &mut Vec<String>, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)->bool{//funcionando
 	if let Ok(iterador) = dir.read_dir(){
 		for entry in iterador{
 			let entry = entry.expect("Erro na leitura do iterador de diretórios");
@@ -115,7 +114,7 @@ fn read_dir_recursive(dir: PathBuf, vetor_erro: &mut Vec<String>, tx1: SyncSende
 					vetor_erro.push(String::from(caminho_arquivo.to_str().unwrap()));
 				}
 			}else if caminho_arquivo.is_dir(){
-				if !read_dir_recursive(caminho_arquivo, vetor_erro, tx1.clone(), bufterminal){
+				if !read_dir_recursive(caminho_arquivo.as_path(), vetor_erro, tx1.clone(), bufterminal){
 					return false;
 				}
 			}

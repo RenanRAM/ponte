@@ -156,7 +156,7 @@ fn anvancar_corrompido(nome_antigo: &Path, mut tam_restante: u64, stream: &mut A
 	let novo_nome = nome_corrompido(filename);
 	let novo_nome_completo = nome_antigo.with_file_name(&novo_nome);
 
-	//TODO: fazer um orint caso não consiga renomear
+	//TODO: fazer um print caso não consiga renomear
 	if let Err(_) = fs::rename(nome_antigo, novo_nome_completo){
 		println!("Não foi possível retomar a transferência após erro na escrita do arquivo {}", filename);
 		process::exit(1);
