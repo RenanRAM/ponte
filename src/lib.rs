@@ -28,6 +28,8 @@ use std::net::Ipv4Addr;
 use std::io::{self,BufRead};
 use std::str::FromStr;
 
+use get_if_addrs::{IfAddr,Ifv4Addr,get_if_addrs};
+
 mod servidor;
 mod cliente;
 
@@ -197,4 +199,73 @@ fn pedir_ip() -> Option<Ipv4Addr> {
 		return None;
 	};
 	Some(ipv4)
+}
+
+fn obter_if_unico() -> Option<Ifv4Addr> {
+	let Ok(ifaces) = get_if_addrs()
+	else{
+		println!("Erro ao percorrer interfaces de ip");
+		return None;
+	};
+
+	let mut retorno_unico: Option<Ifv4Addr> = None;
+
+	for iface in ifaces{
+		if iface.is_loopback() {continue;}
+		if let IfAddr::V4(ifv4) = iface.addr{
+			if retorno_unico.is_none() {
+				retorno_unico = Some(ifv4);
+			}else{
+				return None;
+			}
+		}
+	}
+
+	retorno_unico
+}
+
+fn completar_ip(semi_ip: u32, ip_local: u32, mask: u32) -> Option<Ipv4Addr> {
+
+	if (semi_ip & !mask) != semi_ip{
+		//semi ip não pertence à rede
+		return None;
+	}
+	let ip_rede: u32 = ip_local & mask;
+	let ip_completo: u32 = semi_ip | ip_rede;
+	return Some(Ipv4Addr::from_bits(ip_completo));
+}
+
+//TODO:criar função que interpreta uma esntrada string que representa um ip incompleto
+//usar split, verificar se existem entre 1 e 3 valores depois (de split) e se todos são números entre 0 e 255...
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn teste_de_ip() {
+		//coloque o ip do computador antes de testar
+		let ifv4 = obter_if_unico().unwrap();
+		assert_eq!(ifv4.ip, Ipv4Addr::new(192,168,0,108));
+	}
+
+	#[test]
+	fn teste_completar_ip_pc(){
+		//caso hipotético
+		let semi_ip = Ipv4Addr::new(0, 0, 0, 108).to_bits();
+		let ifv4 = obter_if_unico().unwrap();
+		let mask = ifv4.netmask.to_bits();
+		let ip_local = ifv4.ip.to_bits();
+		let ip_completo = completar_ip(semi_ip, ip_local, mask);
+		assert_eq!(ip_completo, Some(Ipv4Addr::new(192,168,0,108)));
+	}
+
+	#[test]
+	fn teste_completar_ip1(){
+		let semi_ip = Ipv4Addr::new(0, 0, 5, 147).to_bits();
+		let mask = Ipv4Addr::new(255, 255, 0, 0).to_bits();
+		let ip_local = Ipv4Addr::new(192, 168, 4, 18).to_bits();
+		let ip_completo = completar_ip(semi_ip, ip_local, mask);
+		assert_eq!(ip_completo, Some(Ipv4Addr::new(192, 168, 5, 147)));
+	}
 }

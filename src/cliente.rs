@@ -10,7 +10,7 @@ use std::process;
 use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal,pedir_ip};
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
-
+//TODO: nova função que permite digitar apena o final do ip e o resto é completado automaticamente
 //inicia o cliente, função a ser executada no main
 pub fn iniciar() -> std::io::Result<()> {
 

@@ -7,9 +7,9 @@ use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico};
 
-use get_if_addrs::{IfAddr,get_if_addrs};
+use get_if_addrs::Ifv4Addr;
 
 type Arcmb = BufReader<TcpStream>;
 //struct para nome e tamanho de arquivo
@@ -49,17 +49,19 @@ impl Cabecalho {
 //inicia o servidor, função a ser chamada no main
 pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 
-	let mut ipv4:Option<Ipv4Addr> = None;
-	
+	let ipv4:Option<Ipv4Addr>;
+	let mut ifv4:Option<Ifv4Addr> = None;
 	//condição de auto ip
 	if auto_ip{
-		ipv4 = obter_ip_unico();
+		ifv4 = obter_if_unico();
 	}
 
 	//pedir ip caso ainda não tenha nada
-	if ipv4.is_none(){
+	if ifv4.is_none(){
 		println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
 		ipv4 = pedir_ip();
+	}else{
+		ipv4 = Some(ifv4.unwrap().ip);
 	}
 
 	//não foi obtido qualquer ip, abortar
@@ -178,29 +180,6 @@ fn anvancar_corrompido(nome_antigo: &Path, mut tam_restante: u64, stream: &mut A
 	}
 }
 
-fn obter_ip_unico() -> Option<Ipv4Addr> {
-	let Ok(ifaces) = get_if_addrs()
-	else{
-		println!("Erro ao percorrer interfaces de ip");
-		return None;
-	};
-
-	let mut retorno_unico: Option<Ipv4Addr> = None;
-
-	for iface in ifaces{
-		if iface.is_loopback() {continue;}
-		if let IfAddr::V4(ipv4) = iface.addr{
-			if retorno_unico.is_none() {
-				retorno_unico = Some(ipv4.ip);
-			}else{
-				return None;
-			}
-		}
-	}
-
-	retorno_unico
-}
-
 fn nome_corrompido(nome: &str) -> String{
 
 	let mut novo_nome = String::new();
@@ -219,12 +198,6 @@ fn nome_corrompido(nome: &str) -> String{
 #[cfg(test)]
 mod tests {
 	use super::*;
-
-	#[test]
-	fn teste_de_ip() {
-		//coloque o ip do computador antes de testar
-		assert_eq!(obter_ip_unico(), Some(Ipv4Addr::new(192,168,0,108)));
-	}
 
 	#[test]
 	fn teste_nome_corrompido0() {
