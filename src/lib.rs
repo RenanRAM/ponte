@@ -192,13 +192,55 @@ fn pedir_ip() -> Option<Ipv4Addr> {
 	let mut input = String::new();
 	let mut stdin = io::stdin().lock();
 	stdin.read_line(&mut input).unwrap();
-
-	let Ok(ipv4) = Ipv4Addr::from_str(input.trim_end())
+	let input_trim = input.trim_end();
+	let Ok(ipv4) = Ipv4Addr::from_str(input_trim)
 	else{
-		println!("O ip digitado não é válido");
-		return None;
+		//interpretando entrada
+		let opt_ipv4 = interpretar_ip(input_trim);
+		if opt_ipv4.is_none(){
+			return None;
+		}
+		let semi_ipv4_u32 = opt_ipv4.unwrap();
+
+		//obter ip deste pc
+		let interface = obter_if_unico();
+		if interface.is_none(){
+			return None;
+		}
+		let iface = interface.unwrap();
+
+		//tentando completar
+		let opt_ipv4_completo = completar_ip(semi_ipv4_u32, iface.ip.to_bits(), iface.netmask.to_bits());
+
+		if opt_ipv4_completo.is_none(){
+			println!("O ip digitado não é válido");
+		}
+
+		return opt_ipv4_completo;
 	};
 	Some(ipv4)
+}
+
+fn interpretar_ip(entrada: &str) -> Option<u32>{
+	let pontos = entrada.matches('.').count();
+	if pontos > 2{
+		return None;
+	}
+	let separado = entrada.split('.');
+	//tentar converter para u8
+	let ipv4 = separado.map(|e| e.parse::<u8>())
+	.rev()//invertendo pois a entrada deve ser lida de tras para frente
+	.enumerate()//obtendo indexes
+	.try_fold(0u32, |acc, (i, item)| {//se falhar: ipv4 = None
+		if item.is_err(){
+			return None;
+		}
+		let s = 8 * i;
+		let result: u32 = acc | ((item.unwrap() as u32) << s);
+		Some(result)
+	});
+
+	return ipv4;
 }
 
 fn obter_if_unico() -> Option<Ifv4Addr> {
@@ -247,6 +289,50 @@ mod tests {
 		//coloque o ip do computador antes de testar
 		let ifv4 = obter_if_unico().unwrap();
 		assert_eq!(ifv4.ip, Ipv4Addr::new(192,168,0,108));
+	}
+
+	#[test]
+	fn semi_ip1() {
+		let opt = interpretar_ip("123.111");
+		assert_eq!(opt.unwrap(), Ipv4Addr::new(0, 0, 123, 111).to_bits());
+	}
+
+	#[test]
+	fn semi_ip2() {
+		let opt = interpretar_ip("212.123.111");
+		assert_eq!(opt.unwrap(), Ipv4Addr::new(0, 212, 123, 111).to_bits());
+	}
+
+	#[test]
+	fn semi_ip3() {
+		let opt = interpretar_ip("111");
+		assert_eq!(opt.unwrap(), Ipv4Addr::new(0, 0, 0, 111).to_bits());
+	}
+
+	#[test]
+	fn semi_ip4() {
+		let opt = interpretar_ip("7");
+		assert_eq!(opt.unwrap(), Ipv4Addr::new(0, 0, 0, 7).to_bits());
+	}
+
+	#[test]
+	fn semi_ip5() {
+		let opt = interpretar_ip("6.7");
+		assert_eq!(opt.unwrap(), Ipv4Addr::new(0, 0, 6, 7).to_bits());
+	}
+
+	#[test]
+	#[should_panic]
+	fn semi_ipe1() {
+		let opt = interpretar_ip("256.7");
+		let _ = opt.unwrap();
+	}
+
+	#[test]
+	#[should_panic]
+	fn semi_ipe2() {
+		let opt = interpretar_ip("g.25.7");
+		let _ = opt.unwrap();
 	}
 
 	#[test]
