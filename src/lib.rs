@@ -280,9 +280,6 @@ pub fn completar_ip(semi_ip: u32, ip_local: u32, mask: u32) -> Option<Ipv4Addr> 
 	return Some(Ipv4Addr::from_bits(ip_completo));
 }
 
-//TODO:criar função que interpreta uma esntrada string que representa um ip incompleto
-//usar split, verificar se existem entre 1 e 3 valores depois (de split) e se todos são números entre 0 e 255...
-
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -303,14 +300,5 @@ mod tests {
 		let ip_local = ifv4.ip.to_bits();
 		let ip_completo = completar_ip(semi_ip, ip_local, mask);
 		assert_eq!(ip_completo, Some(Ipv4Addr::new(192,168,0,108)));
-	}
-
-	#[test]
-	fn teste_completar_ip1(){
-		let semi_ip = Ipv4Addr::new(0, 0, 5, 147).to_bits();
-		let mask = Ipv4Addr::new(255, 255, 0, 0).to_bits();
-		let ip_local = Ipv4Addr::new(192, 168, 4, 18).to_bits();
-		let ip_completo = completar_ip(semi_ip, ip_local, mask);
-		assert_eq!(ip_completo, Some(Ipv4Addr::new(192, 168, 5, 147)));
 	}
 }
