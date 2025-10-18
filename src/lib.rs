@@ -30,7 +30,7 @@ use std::str::FromStr;
 
 use get_if_addrs::{IfAddr,Ifv4Addr,get_if_addrs};
 
-mod servidor;
+pub mod servidor;
 mod cliente;
 
 struct BufTerminal{
@@ -172,7 +172,7 @@ fn verificar_pasta_envia(){
 }
 
 //cria uma pasta
-fn criar_pasta(pasta: &Path)->bool{
+fn criar_pasta(pasta: &Path) -> bool{
 	let status = fs::create_dir_all(pasta);
 	if let Err(erro) = status{
 		println!("Erro ao criar pasta: {erro}");
@@ -183,7 +183,7 @@ fn criar_pasta(pasta: &Path)->bool{
 }
 
 //verifica se a pasta está vazia
-fn esta_vazia(pasta: &Path) -> bool {
+fn esta_vazia(pasta: &Path) -> bool{
 	let mut entries = fs::read_dir(pasta).unwrap();
 	entries.next().is_none()// Retorna `true` se não houver arquivos
 }
@@ -278,6 +278,21 @@ pub fn completar_ip(semi_ip: u32, ip_local: u32, mask: u32) -> Option<Ipv4Addr> 
 	let ip_rede: u32 = ip_local & mask;
 	let ip_completo: u32 = semi_ip | ip_rede;
 	return Some(Ipv4Addr::from_bits(ip_completo));
+}
+
+pub fn nome_corrompido(nome: &str) -> String{
+
+	let mut novo_nome = String::new();
+	let (nome_split, ext) = if nome.contains("."){
+		//separa exatamente o nome antes do . a extenão com . antes
+		nome.split_at(nome.find(".").unwrap())
+	}else{
+		(nome, "")
+	};
+	novo_nome.push_str(nome_split);
+	novo_nome.push_str("(corrompido)");
+	novo_nome.push_str(ext);
+	return novo_nome;
 }
 
 #[cfg(test)]

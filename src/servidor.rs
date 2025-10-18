@@ -7,7 +7,7 @@ use std::process;
 use std::io::Error;
 
 use std::cmp::min;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico,nome_corrompido};
 
 use get_if_addrs::Ifv4Addr;
 
@@ -177,43 +177,5 @@ fn anvancar_corrompido(nome_antigo: &Path, mut tam_restante: u64, stream: &mut A
 		}else{
 			panic!("Erro fatal")
 		}
-	}
-}
-
-fn nome_corrompido(nome: &str) -> String{
-
-	let mut novo_nome = String::new();
-	let (nome_split, ext) = if nome.contains("."){
-		//separa exatamente o nome antes do . a extenão com . antes
-		nome.split_at(nome.find(".").unwrap())
-	}else{
-		(nome, "")
-	};
-	novo_nome.push_str(nome_split);
-	novo_nome.push_str("(corrompido)");
-	novo_nome.push_str(ext);
-	return novo_nome;
-}
-
-#[cfg(test)]
-mod tests {
-	use super::*;
-
-	#[test]
-	fn teste_nome_corrompido0() {
-		let novo_nome = nome_corrompido("arquivo");
-		assert_eq!(novo_nome.as_str(), "arquivo(corrompido)");
-	}
-
-	#[test]
-	fn teste_nome_corrompido1() {
-		let novo_nome = nome_corrompido("arquivo.txt");
-		assert_eq!(novo_nome.as_str(), "arquivo(corrompido).txt");
-	}
-
-	#[test]
-	fn teste_nome_corrompido2() {
-		let novo_nome = nome_corrompido("arquivo.txt.ggt");
-		assert_eq!(novo_nome.as_str(), "arquivo(corrompido).txt.ggt");
 	}
 }

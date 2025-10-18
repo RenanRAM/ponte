@@ -1,7 +1,25 @@
 mod ips;
 
 use ips::{interpretar_ips, completar_ips};
-use ponte::{interpretar_ip, completar_ip};
+use ponte::{interpretar_ip, completar_ip, nome_corrompido};
+
+fn assert_nome_corrompido(original: &str, esperado: &str) {
+	let novo_nome = nome_corrompido(original);
+	assert_eq!(novo_nome.as_str(), esperado);
+}
+
+#[test]
+fn testar_nome_corrompido(){
+	assert_nome_corrompido("arquivo","arquivo(corrompido)");
+	assert_nome_corrompido("arquivo.txt","arquivo(corrompido).txt");
+	assert_nome_corrompido("a.txt","a(corrompido).txt");
+	assert_nome_corrompido("arquivo(1).txt","arquivo(1)(corrompido).txt");
+	assert_nome_corrompido("arquivo.tx","arquivo(corrompido).tx");
+	assert_nome_corrompido("arquivo.t","arquivo(corrompido).t");
+	assert_nome_corrompido("arquivo.txt.w","arquivo(corrompido).txt.w");
+	assert_nome_corrompido("arquivo.txt.wq","arquivo(corrompido).txt.wq");
+	assert_nome_corrompido("arquivo.txt.ggt","arquivo(corrompido).txt.ggt");
+}
 
 #[test]
 fn lista_ips_teste(){
@@ -29,4 +47,3 @@ fn lista_completar_ip(){
 		assert_eq!(opt.unwrap(), ipv4);
 	}
 }
-
