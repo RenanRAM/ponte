@@ -42,7 +42,7 @@ impl BufTerminal{
 
 	fn new()-> Self{
 		let t_d = Arc::new(Mutex::new((String::new(), false)));
-		let texto_desigar = t_d.clone();
+		let texto_desligar = t_d.clone();
 		let thread1 = thread::spawn(move || {
 		loop{
 				let mut campos = t_d.lock().unwrap_or_else(|_| {
@@ -63,7 +63,7 @@ impl BufTerminal{
 		cell.set(thread1).unwrap();
 		Self{
 			thread: cell,
-			texto_desligar: texto_desigar,
+			texto_desligar: texto_desligar,
 		}
 	}
 

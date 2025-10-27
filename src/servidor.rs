@@ -5,7 +5,7 @@ use std::path::{PathBuf,Path};
 use std::str::FromStr;
 use std::process;
 use std::io::Error;
-
+use std::mem;
 use std::cmp::min;
 use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico,nome_corrompido};
 
@@ -31,7 +31,8 @@ impl Cabecalho {
 		nome = nome.trim_end().to_string();
 
 		//obtendo o tamanho
-		let mut buftamanho = [0u8;8];//u64
+		let mut buftamanho = [0u8;mem::size_of::<u64>()];//u64
+		
 		reader.read_exact(&mut buftamanho).unwrap();
 		let tamanho: u64 = u64::from_le_bytes(buftamanho);
 		if tamanho == 0 && nome.as_str() == FINAL_FLAG{
