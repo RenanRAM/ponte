@@ -19,7 +19,7 @@ struct Cabecalho{
 }
 
 impl Cabecalho {
-	fn obter(reader: &mut Arcmb, buf_terminal: & BufTerminal)-> Option<Self>{
+	fn obter(reader: &mut Arcmb)-> Option<Self>{
 		let mut nome = String::new();
 		//let mut reader = reader.lock().unwrap();
 		let _ = reader.read_line(&mut nome).expect("Erro na leitura do nome");
@@ -38,7 +38,6 @@ impl Cabecalho {
 		if tamanho == 0 && nome.as_str() == FINAL_FLAG{
 			None
 		}else{
-			buf_terminal.escreve(format!("Nome completo: {nome}  Tamanho: {tamanho}b\r\n").as_str());
 			Some(Self{
 				nome,
 				tamanho
@@ -90,7 +89,9 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 
 
 	//lendo stream e criando arquivos
-	while let Some(cab) = Cabecalho::obter(&mut reader, &buf_terminal){
+	while let Some(cab) = Cabecalho::obter(&mut reader){
+
+		buf_terminal.escreve(format!("{}  Tamanho: {}b\r\n", cab.nome, cab.tamanho).as_str());
 		if !criar_arquivo(cab, &mut reader){
 			println!("Ocorreu um erro na transferência!");
 			return Err(Error::other("Erro na transferência: envio incompleto"));
