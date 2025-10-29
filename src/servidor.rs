@@ -110,7 +110,10 @@ fn criar_arquivo(cab: Cabecalho, reader: &mut Arcmb) -> bool{
 
 	//criando diretórios caso não existam
 	if let Some(path_pai) = nome_com_caminho.parent(){
-		fs::create_dir_all(path_pai).expect("Não foi possível criar o diretório!");
+		if let Err(_) = fs::create_dir_all(path_pai){
+			println!("Não foi possível criar um diretório");
+			return false;
+		}
 	}
 	
 	//criando o arquivo
