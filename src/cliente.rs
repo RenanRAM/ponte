@@ -103,8 +103,12 @@ pub fn iniciar() -> std::io::Result<()> {
 
 //true = ok, false = erro, faz a leitura dos diretórios e envia todos os arquivos
 fn read_dir_recursive(dir: &Path, vetor_erro: &mut Vec<String>, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)->bool{//funcionando
+
 	if let Ok(iterador) = dir.read_dir(){
 		for entry in iterador{
+			if entry.is_err(){
+				return false;
+			}
 			let entry = entry.expect("Erro na leitura do iterador de diretórios");
 			let caminho_arquivo = entry.path();//PathBuf, é a única opção, se não usaria &Path
 			if caminho_arquivo.is_file() {
