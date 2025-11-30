@@ -7,6 +7,8 @@ use std::process;
 use std::io::Error;
 use std::mem;
 use std::cmp::min;
+use std::time::Duration;
+use std::thread;
 use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico,nome_corrompido};
 
 use get_if_addrs::Ifv4Addr;
@@ -73,6 +75,7 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 	let listener = TcpListener::bind((ipv4, PORTA))?;
 	println!("Servidor da ponte escutando em {ipv4}, use este ip no cliente/enviar");
 	let (stream , soc) = listener.accept().unwrap();
+	//TODO, melhorar a visualização desses prints abaixo↓
 	print!("Cliente conectado! ");
 	match soc{
 		SocketAddr::V4(socv4) =>{
@@ -82,6 +85,7 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 			println!("ip(v6): {}", socv6.ip());
 		},
 	}
+	thread::sleep(Duration::from_millis(900));
 
 	let mut reader = BufReader::new(stream);
 

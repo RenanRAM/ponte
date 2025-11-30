@@ -44,7 +44,7 @@ impl BufTerminal{
 		let t_d = Arc::new(Mutex::new((String::new(), false)));
 		let texto_desligar = t_d.clone();
 		let thread1 = thread::spawn(move || {
-		loop{
+			loop{
 				let mut campos = t_d.lock().unwrap_or_else(|_| {
 					println!("Erro na execução, poison");
 					process::exit(1);
