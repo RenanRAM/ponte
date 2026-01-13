@@ -18,7 +18,7 @@ pub fn get_lista_teste1() -> Vec<(&'static str, u32)>{
 //usar para testar se a interpretação resulta em None em todos estes casos
 pub fn get_lista_falha1() -> Vec<&'static str> {
 	return vec![
-	"256.7", "g.25.7", "2.5.7.1", "43.12.54.11.6", ".2.6.", "...", "..", ".",
+	"145.278", "256.7", "g.25.7", "2.5.7.1", "43.12.54.11.6", ".2.6.", "...", "..", ".",
 	"78.", "2.4,5", "31.322", ".75.32.178", ".32.723", "84.7s9.4", "1º.2º",
 	];
 }

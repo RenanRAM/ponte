@@ -75,7 +75,7 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 	let listener = TcpListener::bind((ipv4, PORTA))?;
 	println!("Servidor da ponte escutando em {ipv4}, use este ip no cliente/enviar");
 	let (stream , soc) = listener.accept().unwrap();
-	//TODO, melhorar a visualização desses prints abaixo↓
+
 	print!("Cliente conectado! ");
 	match soc{
 		SocketAddr::V4(socv4) =>{

@@ -19,6 +19,8 @@ fn testar_nome_corrompido(){
 	assert_nome_corrompido("arquivo.txt.w","arquivo(corrompido).txt.w");
 	assert_nome_corrompido("arquivo.txt.wq","arquivo(corrompido).txt.wq");
 	assert_nome_corrompido("arquivo.txt.ggt","arquivo(corrompido).txt.ggt");
+	assert_nome_corrompido("arquivo 1.t","arquivo 1(corrompido).t");
+	assert_nome_corrompido("arquivo 1.txt.ggt","arquivo 1(corrompido).txt.ggt");
 }
 
 #[test]
