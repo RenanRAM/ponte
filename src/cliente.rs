@@ -8,7 +8,7 @@ use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
 use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal,pedir_ip};
-
+//TODO: isolar a criação de thread em uma função separada
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 //inicia o cliente, função a ser executada no main
 pub fn iniciar() -> std::io::Result<()> {
@@ -202,9 +202,10 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	loop{
 		let mut buffer1 = [0u8;BUFFBYTES];
 		match file.read(&mut buffer1){
+			Ok(0) =>{//fim do arquivo
+				break;
+			}
 			Ok(n) =>{
-				if n == 0 {break;}//fim do arquivo
-
 				//enviando o buffer e o numero de bytes lidos
 				tx1.send((buffer1,n)).expect("Canal fechado antes da hora");
 			},
