@@ -7,8 +7,10 @@ use std::sync::mpsc::{sync_channel, SyncSender};
 use std::time::{Instant,Duration};
 use std::thread::sleep;
 use std::process;
-use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,BufTerminal,pedir_ip};
+use crate::{PORTA,BUFFBYTES,PASTAENVIO,TTL_CLIENT,FINAL_FLAG,pedir_ip};
+use crate::buf_terminal::BufTerminal;
 //TODO: isolar a criação de thread em uma função separada
+
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 //inicia o cliente, função a ser executada no main
 pub fn iniciar() -> std::io::Result<()> {

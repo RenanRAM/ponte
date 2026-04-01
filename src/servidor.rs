@@ -9,7 +9,8 @@ use std::mem;
 use std::cmp::min;
 use std::time::Duration;
 use std::thread;
-use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,BufTerminal,pedir_ip,obter_if_unico,nome_corrompido};
+use crate::{PORTA,BUFFBYTES,PASTARECEBE,FINAL_FLAG,SET_LEN_LIMIT,pedir_ip,obter_if_unico,nome_corrompido};
+use crate::buf_terminal::BufTerminal;
 
 use get_if_addrs::Ifv4Addr;
 
