@@ -21,6 +21,7 @@ use std::process;
 use std::net::Ipv4Addr;
 use std::io::{self,BufRead};
 use std::str::FromStr;
+use std::cell::OnceCell;
 
 use get_if_addrs::{IfAddr,Ifv4Addr,get_if_addrs};
 
@@ -194,20 +195,19 @@ fn obter_if_unico() -> Option<Ifv4Addr> {
 		return None;
 	};
 
-	let mut retorno_unico: Option<Ifv4Addr> = None;
+		//OnceCell
+	let mut retorno_unico: OnceCell<Ifv4Addr> = OnceCell::new();
 
 	for iface in ifaces{
 		if iface.is_loopback() {continue;}
 		if let IfAddr::V4(ifv4) = iface.addr{
-			if retorno_unico.is_none() {
-				retorno_unico = Some(ifv4);
-			}else{
-				return None;
+			if let Err(_) = retorno_unico.set(ifv4){
+				return None	
 			}
 		}
 	}
 
-	retorno_unico
+	Some(retorno_unico.take().unwrap())
 }
 
 pub fn completar_ip(semi_ip: u32, ip_local: u32, mask: u32) -> Option<Ipv4Addr> {
