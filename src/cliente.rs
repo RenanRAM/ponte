@@ -1,4 +1,4 @@
-use std::io::{Write,Read,ErrorKind};
+use std::io::{Write,Read,BufRead,ErrorKind};
 use std::net::{TcpStream,SocketAddrV4,SocketAddr};
 use std::path::Path;
 use std::fs::File;
@@ -13,13 +13,13 @@ use crate::buf_terminal::BufTerminal;
 
 type MPSCDATA = ([u8; BUFFBYTES],usize);
 //inicia o cliente, função a ser executada no main
-pub fn iniciar() -> std::io::Result<()> {
+pub fn iniciar<R : Read + BufRead>(mut stdin: R) -> std::io::Result<()> {
 
 	//vetor para armazenar os não enviados por qualquer erro
 	let mut nao_enviados: Vec<String> = Vec::new();
 
 	println!("Digite o ip do servidor, ex: 127.0.0.1");
-	let optipv4 = pedir_ip();
+	let optipv4 = pedir_ip(&mut stdin);
 
 	if optipv4.is_none(){
 		process::exit(0);

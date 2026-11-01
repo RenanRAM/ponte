@@ -50,7 +50,7 @@ impl Cabecalho {
 }
 
 //inicia o servidor, função a ser chamada no main
-pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
+pub fn iniciar<R : Read + BufRead>(mut stdin: R, auto_ip: bool) -> std::io::Result<()> {
 
 	let ipv4:Option<Ipv4Addr>;
 	let mut ifv4:Option<Ifv4Addr> = None;
@@ -60,9 +60,10 @@ pub fn iniciar(auto_ip: bool) -> std::io::Result<()> {
 	}
 
 	//pedir ip caso ainda não tenha nada
+
 	if ifv4.is_none(){
 		println!("Digite o ip deste computador, ex: 127.0.0.1 para teste no localhost");
-		ipv4 = pedir_ip();
+		ipv4 = pedir_ip(&mut stdin);
 	}else{
 		ipv4 = Some(ifv4.unwrap().ip);
 	}

@@ -4,9 +4,9 @@ const PORTA: u16 = 7879;
 //tamanho do buffer de leitura ou escrita
 const BUFFBYTES: usize = 8192;
 //nome da pasta do cliente
-const PASTAENVIO: &str = "enviar/";
+pub const PASTAENVIO: &str = "enviar/";
 //nome da pasta do servidor
-const PASTARECEBE: &str = "receber/";
+pub const PASTARECEBE: &str = "receber/";
 //TTL para o cliente
 const TTL_CLIENT: u32 = 6;
 //limite de set_len
@@ -19,14 +19,14 @@ use std::path::Path;
 use std::fs;
 use std::process;
 use std::net::Ipv4Addr;
-use std::io::{self,BufRead};
+use std::io::{self,Read,BufRead};
 use std::str::FromStr;
 use std::cell::OnceCell;
 
 use get_if_addrs::{IfAddr,Ifv4Addr,get_if_addrs};
 
-mod servidor;
-mod cliente;
+pub mod servidor;
+pub mod cliente;
 mod buf_terminal;
 //o comportamento de pub em funções é diferente, funções sem pub não são acessíveis fora do arquivo
 // enquanto struc sem pub ainda pode ser acessada fora do arquivo e em qualquer lugar dentro da crate (src/) do projeto
@@ -42,7 +42,8 @@ pub fn comandos_disponiveis(){
 pub fn inicia_cliente(){
 	verificar_pasta_envia();
 	println!("----Modo de envio----");
-	let status = cliente::iniciar();
+	let stdin = io::stdin().lock();
+	let status = cliente::iniciar(stdin);
 	match status{
 		Ok(_)=>{
 			println!("Envio finalizado com sucesso");
@@ -56,7 +57,8 @@ pub fn inicia_cliente(){
 pub fn inicia_servidor(auto_ip: bool){
 	verificar_pasta_recebe();
 	println!("----Modo de recebimento----");
-	let status = servidor::iniciar(auto_ip);
+	let stdin = io::stdin().lock();
+	let status = servidor::iniciar(stdin,auto_ip);
 	match status{
 		Ok(_)=>{
 			println!("Recebimento finalizado com sucesso");
@@ -130,9 +132,8 @@ fn esta_vazia(pasta: &Path) -> bool{
 	entries.next().is_none()// Retorna `true` se não houver arquivos
 }
 
-fn pedir_ip() -> Option<Ipv4Addr> {
+fn pedir_ip<R : Read + BufRead>(stdin: &mut R) -> Option<Ipv4Addr> {
 	let mut input = String::new();
-	let mut stdin = io::stdin().lock();
 	stdin.read_line(&mut input).unwrap();
 	let input_trim = input.trim_end();
 	let Ok(ipv4) = Ipv4Addr::from_str(input_trim)
@@ -188,7 +189,7 @@ pub fn interpretar_ip(entrada: &str) -> Option<u32>{
 	return ipv4;
 }
 
-fn obter_if_unico() -> Option<Ifv4Addr> {
+pub fn obter_if_unico() -> Option<Ifv4Addr> {
 	let Ok(ifaces) = get_if_addrs()
 	else{
 		println!("Erro ao percorrer interfaces de ip");
