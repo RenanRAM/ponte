@@ -169,16 +169,18 @@ pub fn interpretar_ip(entrada: &str) -> Option<u32>{
 	if pontos > 2{
 		return None;
 	}
+	if entrada.contains(","){
+		println!("Não use vírgulas, use pontos \".\"");
+		return None;
+	}
+
 	let separado = entrada.split('.');
 	//tentar converter para u8
-	let ipv4 = separado.map(|e| e.parse::<u8>())
+	let ipv4 = separado.map(|e| e.parse::<u8>())//lembrando que map só vai executar a função se for consumido, no caso no try_fold
 	.rev()//invertendo pois a entrada deve ser lida de tras para frente
 	.enumerate()//obtendo indexes
 	.try_fold(0u32, |acc, (i, item)| {//se falhar: ipv4 = None
-		if item.is_err(){
-			return None;
-		}
-		if i > 2{// apenas 0, 1 e 2
+		if item.is_err() || i > 2{
 			return None;
 		}
 		let s = 8 * i;
