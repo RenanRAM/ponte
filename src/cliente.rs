@@ -195,6 +195,12 @@ fn enviar(caminho: &Path, tx1: SyncSender<MPSCDATA>, bufterminal: & BufTerminal)
 	let metadata = metadata.expect("Não foi possível ler o tamanho do arquivo"); // Obtém as metainformações do arquivo
 	let tamanho_arquivo: u64 = metadata.len(); // Retorna o tamanho do arquivo
 
+	//verificando o tamanho do nome
+	if nome_com_quebra.as_str().len() > BUFFBYTES{
+		bufterminal.escreve("Nome do arquivo muito grande");
+		return false
+	}
+
 	bufterminal.escreve("  Enviando...\r\n");
 
 	//gerando um buffer de cabeçalho para o TCP
